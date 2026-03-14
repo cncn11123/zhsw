@@ -4,7 +4,7 @@
 function checkAuth() {
     const token = localStorage.getItem('token');
     if (!token) {
-        window.location.href = 'login.html';
+        window.location.href = 'https://zhsw1.pages.dev/login.html';
         return false;
     }
     
@@ -20,7 +20,7 @@ function checkAuth() {
 function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    window.location.href = 'login.html';
+    window.location.href = 'https://zhsw1.pages.dev/login.html';
 }
 
 // 导航高亮
