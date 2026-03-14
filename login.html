@@ -466,13 +466,16 @@
 
             // 登录成功
             if (username && password) {
-                // 保存登录信息
-                localStorage.setItem('token', 'demo-token');
-                localStorage.setItem('user', JSON.stringify({username: username, role: 'admin'}));
+                try {
+                    // 保存登录信息
+                    localStorage.setItem('token', 'demo-token');
+                    localStorage.setItem('user', JSON.stringify({username: username, role: 'admin'}));
+                } catch(e) {
+                    console.log('localStorage not available');
+                }
                 
-                // 跳转到仪表盘
+                // 直接跳转
                 window.location.href = './dashboard.html';
-                return;
             }
         });
 
