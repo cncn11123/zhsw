@@ -393,7 +393,7 @@
     </div>
 
     <script>
-        // 生成随机验证码
+        // 生成随机验证码（排除易混淆字母数字）
         function generateCaptcha() {
             const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
             let captcha = '';
@@ -426,7 +426,7 @@
             }
         }
 
-        // 表单验证
+        // 表单验证与登录跳转
         document.getElementById('loginForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
@@ -453,40 +453,38 @@
                 document.getElementById('passwordGroup').classList.remove('error');
             }
 
-            // 验证验证码（可选）
-            if (captcha && captcha !== captchaText) {
+            // 验证验证码
+            if (!captcha || captcha !== captchaText) {
                 document.getElementById('captchaGroup').classList.add('error');
                 alert('验证码错误，请重新输入！');
-                refreshCaptcha();
-                document.getElementById('captcha').value = '';
-                // 不阻止登录，只提示
+                refreshCaptcha();               // 刷新验证码
+                document.getElementById('captcha').value = '';  // 清空输入
+                hasError = true;
             } else {
                 document.getElementById('captchaGroup').classList.remove('error');
             }
 
-            // 登录成功
-            if (username && password) {
-                try {
-                    // 保存登录信息
-                    localStorage.setItem('token', 'demo-token');
-                    localStorage.setItem('user', JSON.stringify({username: username, role: 'admin'}));
-                } catch(e) {
-                    console.log('localStorage not available');
-                }
-                
-                // 直接跳转
-                window.location.href = 'https://zhsw1.pages.dev/dashboard.html';
+            // 登录成功：无错误且验证码匹配
+            if (!hasError && captcha === captchaText) {
+                alert('登录成功！欢迎使用流量计监控系统');
+                // 跳转到指定的仪表盘页面
+                window.location.href = 'https://zhsw1.pages.dev/dashboard';
             }
         });
 
-        // 实时移除错误提示
+        // 实时移除错误提示（输入时去掉红框）
         document.querySelectorAll('input').forEach(input => {
             input.addEventListener('input', function() {
                 this.parentElement.classList.remove('error');
             });
         });
 
-        // 初始化
+        // 初始化：生成随机验证码（让每次加载页面验证码都不同）
+        document.addEventListener('DOMContentLoaded', function() {
+            refreshCaptcha();
+        });
+
+        // 初始化粒子动画
         createParticles();
     </script>
 </body>
