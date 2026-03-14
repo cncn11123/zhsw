@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>流量计监控系统 - 设备管理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        /* 顶部导航 */
+        .navbar {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .navbar-brand {
+            font-size: 20px;
+            font-weight: 600;
+            color: #40e0d0;
+            text-shadow: 0 0 20px rgba(64, 224, 208, 0.5);
+        }
+
+        .navbar-menu {
+            display: flex;
+            gap: 20px;
+            list-style: none;
+        }
+
+        .navbar-menu a {
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .navbar-menu a:hover,
+        .navbar-menu a.active {
+            background: rgba(64, 224, 208, 0.2);
+            color: #40e0d0;
+        }
+
+        .navbar-user {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logout-btn {
+            padding: 8px 20px;
+            background: rgba(255, 100, 100, 0.3);
+            border: 1px solid rgba(255, 100, 100, 0.5);
+            border-radius: 8px;
+            color: #ff6b6b;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 100, 100, 0.5);
+        }
+
+        /* 主内容区 */
+        .container {
+            padding: 30px;
+        }
+
+        /* 页面标题 */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .page-header h1 {
+            font-size: 28px;
+        }
+
+        .add-btn {
+            padding: 12px 25px;
+            background: linear-gradient(135deg, #40e0d0, #00ced1);
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .add-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(64, 224, 208, 0.4);
+        }
+
+        /* 筛选栏 */
+        .filter-bar {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-bar select,
+        .filter-bar input {
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .filter-bar select:focus,
+        .filter-bar input:focus {
+            border-color: #40e0d0;
+        }
+
+        .filter-bar select option {
+            background: #1a1a2e;
+        }
+
+        /* 统计卡片 */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+
+        .stat-card .value {
+            font-size: 36px;
+            font-weight: 700;
+            color: #40e0d0;
+        }
+
+        .stat-card .label {
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 8px;
+        }
+
+        .stat-card .value.error {
+            color: #ff6b6b;
+        }
+
+        .stat-card .value.warning {
+            color: #fbbf24;
+        }
+
+        /* 设备表格 */
+        .device-table {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: rgba(64, 224, 208, 0.1);
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #40e0d0;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+
+        .status-badge.online {
+            background: rgba(74, 222, 128, 0.2);
+            color: #4ade80;
+        }
+
+        .status-badge.offline {
+            background: rgba(255, 107, 107, 0.2);
+            color: #ff6b6b;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 12px;
+            margin-right: 5px;
+            transition: all 0.3s;
+        }
+
+        .action-btn.view {
+            background: rgba(64, 224, 208, 0.2);
+            color: #40e0d0;
+        }
+
+        .action-btn.edit {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+        }
+
+        .action-btn.delete {
+            background: rgba(255, 107, 107, 0.2);
+            color: #ff6b6b;
+        }
+
+        .action-btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* 分页 */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 30px;
+        }
+
+        .pagination button {
+            padding: 8px 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .pagination button:hover,
+        .pagination button.active {
+            background: rgba(64, 224, 208, 0.2);
+            border-color: #40e0d0;
+            color: #40e0d0;
+        }
+
+        /* 响应式 */
+        @media (max-width: 1200px) {
+            .stats-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stats-row {
+                grid-template-columns: 1fr;
+            }
+            .navbar {
+                flex-direction: column;
+                gap: 15px;
+            }
+            .device-table {
+                overflow-x: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="navbar-brand">📊 流量计监控系统</div>
+        <ul class="navbar-menu">
+            <li><a href="dashboard.html">仪表盘</a></li>
+            <li><a href="devices.html" class="active">设备管理</a></li>
+            <li><a href="history.html">历史数据</a></li>
+            <li><a href="alarms.html">报警中心</a></li>
+            <li><a href="settings.html">系统设置</a></li>
+        </ul>
+        <div class="navbar-user">
+            <span id="username">admin</span>
+            <button class="logout-btn" onclick="logout()">退出</button>
+        </div>
+    </nav>
+
+    <!-- 主内容区 -->
+    <div class="container">
+        <div class="page-header">
+            <h1>📱 设备管理</h1>
+            <button class="add-btn" onclick="addDevice()">
+                <span>+</span> 添加设备
+            </button>
+        </div>
+
+        <!-- 筛选栏 -->
+        <div class="filter-bar">
+            <select id="statusFilter" onchange="filterDevices()">
+                <option value="">全部状态</option>
+                <option value="online">在线</option>
+                <option value="offline">离线</option>
+            </select>
+            <select id="typeFilter" onchange="filterDevices()">
+                <option value="">全部类型</option>
+                <option value="涡街">涡街流量计</option>
+                <option value="电磁">电磁流量计</option>
+                <option value="超声波">超声波流量计</option>
+            </select>
+            <input type="text" placeholder="搜索设备名称..." id="searchInput" oninput="filterDevices()">
+        </div>
+
+        <!-- 统计卡片 -->
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="value" id="totalCount">10</div>
+                <div class="label">设备总数</div>
+            </div>
+            <div class="stat-card">
+                <div class="value" id="onlineCount">8</div>
+                <div class="label">在线设备</div>
+            </div>
+            <div class="stat-card">
+                <div class="value error" id="offlineCount">2</div>
+                <div class="label">离线设备</div>
+            </div>
+            <div class="stat-card">
+                <div class="value warning" id="alarmCount">3</div>
+                <div class="label">告警设备</div>
+            </div>
+        </div>
+
+        <!-- 设备表格 -->
+        <div class="device-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>设备ID</th>
+                        <th>设备名称</th>
+                        <th>设备类型</th>
+                        <th>安装位置</th>
+                        <th>当前流量</th>
+                        <th>状态</th>
+                        <th>最后更新</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="deviceTable">
+                    <!-- 设备列表 -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 分页 -->
+        <div class="pagination" id="pagination">
+            <!-- 分页按钮 -->
+        </div>
+    </div>
+
+    <script>
+        // 设备数据
+        const devices = [
+            { id: 'FM-A1-001', name: '流量计 A1', type: '涡街', location: '车间1号管道', flow: '125.6', status: 'online', lastUpdate: '2026-03-14 16:00' },
+            { id: 'FM-A2-002', name: '流量计 A2', type: '电磁', location: '车间2号管道', flow: '98.3', status: 'online', lastUpdate: '2026-03-14 16:00' },
+            { id: 'FM-B1-003', name: '流量计 B1', type: '超声波', location: '车间3号管道', flow: '--', status: 'offline', lastUpdate: '2026-03-14 15:30' },
+            { id: 'FM-B2-004', name: '流量计 B2', type: '涡街', location: '车间4号管道', flow: '156.2', status: 'online', lastUpdate: '2026-03-14 16:00' },
+            { id: 'FM-C1-005', name: '流量计 C1', type: '电磁', location: '车间5号管道', flow: '87.5', status: 'online', lastUpdate: '2026-03-14 16:00' },
+            { id: 'FM-C2-006', name: '流量计 C2', type: '超声波', location: '车间6号管道', flow: '--', status: 'offline', lastUpdate: '2026-03-14 14:20' },
+            { id: 'FM-D1-007', name: '流量计 D1', type: '涡街', location: '车间7号管道', flow: '112.8', status: 'online', lastUpdate: '2026-03-14 16:00' },
+            { id: 'FM-D2-008', name: '流量计 D2', type: '电磁', location: '车间8号管道', flow: '134.1', status: 'online', lastUpdate: '2026-03-14 16:00' },
+            { id: 'FM-E1-009', name: '流量计 E1', type: '超声波', location: '车间9号管道', flow: '95.7', status: 'online', lastUpdate: '2026-03-14 16:00' },
+            { id: 'FM-E2-010', name: '流量计 E2', type: '涡街', location: '车间10号管道', flow: '--', status: 'offline', lastUpdate: '2026-03-14 12:00' }
+        ];
+
+        let filteredDevices = [...devices];
+        const itemsPerPage = 5;
+        let currentPage = 1;
+
+        // 检查登录
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = 'login.html';
+            }
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            if (user.username) {
+                document.getElementById('username').textContent = user.username;
+            }
+        }
+
+        // 退出登录
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+        }
+
+        // 筛选设备
+        function filterDevices() {
+            const status = document.getElementById('statusFilter').value;
+            const type = document.getElementById('typeFilter').value;
+            const search = document.getElementById('searchInput').value.toLowerCase();
+
+            filteredDevices = devices.filter(d => {
+                if (status && d.status !== status) return false;
+                if (type && d.type !== type) return false;
+                if (search && !d.name.toLowerCase().includes(search) && !d.id.toLowerCase().includes(search)) return false;
+                return true;
+            });
+
+            currentPage = 1;
+            renderTable();
+            updateStats();
+        }
+
+        // 渲染表格
+        function renderTable() {
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const pageDevices = filteredDevices.slice(start, end);
+
+            const tbody = document.getElementById('deviceTable');
+            tbody.innerHTML = pageDevices.map(d => `
+                <tr>
+                    <td>${d.id}</td>
+                    <td>${d.name}</td>
+                    <td>${d.type}</td>
+                    <td>${d.location}</td>
+                    <td>${d.flow !== '--' ? d.flow + ' m³/h' : '--'}</td>
+                    <td><span class="status-badge ${d.status}">${d.status === 'online' ? '在线' : '离线'}</span></td>
+                    <td>${d.lastUpdate}</td>
+                    <td>
+                        <button class="action-btn view" onclick="viewDevice('${d.id}')">查看</button>
+                        <button class="action-btn edit" onclick="editDevice('${d.id}')">编辑</button>
+                        <button class="action-btn delete" onclick="deleteDevice('${d.id}')">删除</button>
+                    </td>
+                </tr>
+            `).join('');
+
+            renderPagination();
+        }
+
+        // 渲染分页
+        function renderPagination() {
+            const totalPages = Math.ceil(filteredDevices.length / itemsPerPage);
+            const pagination = document.getElementById('pagination');
+            
+            let html = `<button ${currentPage === 1 ? '' : 'onclick="goPage(' + (currentPage - 1) + ')"'}>上一页</button>`;
+            
+            for (let i = 1; i <= totalPages; i++) {
+                html += `<button class="${i === currentPage ? 'active' : ''}" onclick="goPage(${i})">${i}</button>`;
+            }
+            
+            html += `<button ${currentPage === totalPages ? '' : 'onclick="goPage(' + (currentPage + 1) + ')"'}>下一页</button>`;
+            
+            pagination.innerHTML = html;
+        }
+
+        // 跳转页面
+        function goPage(page) {
+            currentPage = page;
+            renderTable();
+        }
+
+        // 更新统计
+        function updateStats() {
+            document.getElementById('totalCount').textContent = filteredDevices.length;
+            document.getElementById('onlineCount').textContent = filteredDevices.filter(d => d.status === 'online').length;
+            document.getElementById('offlineCount').textContent = filteredDevices.filter(d => d.status === 'offline').length;
+            document.getElementById('alarmCount').textContent = filteredDevices.filter(d => d.status === 'offline').length;
+        }
+
+        // 添加设备
+        function addDevice() {
+            alert('添加设备功能开发中...');
+        }
+
+        // 查看设备
+        function viewDevice(id) {
+            alert('查看设备 ' + id + ' 详情');
+        }
+
+        // 编辑设备
+        function editDevice(id) {
+            alert('编辑设备 ' + id);
+        }
+
+        // 删除设备
+        function deleteDevice(id) {
+            if (confirm('确定要删除设备 ' + id + ' 吗？')) {
+                alert('删除设备 ' + id);
+            }
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
+            filterDevices();
+        });
+    </script>
+</body>
+</html>

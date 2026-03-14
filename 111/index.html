@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>流量计监控系统 - 登录</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        /* 背景动画效果 */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .bg-animation::before,
+        .bg-animation::after {
+            content: '';
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            top: -50%;
+            left: -50%;
+            background: radial-gradient(circle, rgba(64, 224, 208, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(255, 105, 180, 0.1) 0%, transparent 50%);
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 浮动粒子 */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(64, 224, 208, 0.6);
+            border-radius: 50%;
+            animation: float 15s infinite;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        /* 登录容器 */
+        .login-container {
+            position: relative;
+            z-index: 10;
+            width: 420px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 50px 40px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5),
+                        inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* 标题 */
+        .login-title {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .login-title h1 {
+            color: #fff;
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            text-shadow: 0 0 30px rgba(64, 224, 208, 0.5);
+        }
+
+        .login-title p {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 14px;
+        }
+
+        .login-title .icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        /* 表单组 */
+        .form-group {
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .form-group input::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        .form-group input:focus {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #40e0d0;
+            box-shadow: 0 0 20px rgba(64, 224, 208, 0.2);
+        }
+
+        /* 验证码容器 */
+        .captcha-group {
+            display: flex;
+            gap: 15px;
+        }
+
+        .captcha-group .form-group {
+            flex: 1;
+        }
+
+        .captcha-group .form-group:last-child {
+            flex: 0.6;
+        }
+
+        .captcha-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 48px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .captcha-box:hover {
+            transform: scale(1.02);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .captcha-box span {
+            color: #fff;
+            font-size: 20px;
+            font-weight: bold;
+            letter-spacing: 4px;
+            user-select: none;
+        }
+
+        /* 记住我 & 忘记密码 */
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .remember-me input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #40e0d0;
+            cursor: pointer;
+        }
+
+        .remember-me span {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+        }
+
+        .forgot-password {
+            color: #40e0d0;
+            font-size: 14px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .forgot-password:hover {
+            text-shadow: 0 0 10px rgba(64, 224, 208, 0.5);
+        }
+
+        /* 登录按钮 */
+        .login-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #40e0d0 0%, #00ced1 50%, #5f9ea0 100%);
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(64, 224, 208, 0.4);
+        }
+
+        .login-btn:hover::before {
+            left: 100%;
+        }
+
+        .login-btn:active {
+            transform: translateY(0);
+        }
+
+        /* 底部 */
+        .login-footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .login-footer p {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 12px;
+        }
+
+        .login-footer a {
+            color: #40e0d0;
+            text-decoration: none;
+        }
+
+        /* 错误提示 */
+        .error-tip {
+            position: absolute;
+            bottom: -20px;
+            left: 0;
+            color: #ff6b6b;
+            font-size: 12px;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .form-group.error input {
+            border-color: #ff6b6b;
+        }
+
+        .form-group.error .error-tip {
+            opacity: 1;
+        }
+
+        /* 响应式 */
+        @media (max-width: 480px) {
+            .login-container {
+                width: 90%;
+                padding: 30px 25px;
+            }
+
+            .login-title h1 {
+                font-size: 22px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 背景动画 -->
+    <div class="bg-animation"></div>
+    
+    <!-- 浮动粒子 -->
+    <div class="particles" id="particles"></div>
+
+    <!-- 登录表单 -->
+    <div class="login-container">
+        <div class="login-title">
+            <span class="icon">📊</span>
+            <h1>流量计监控系统</h1>
+            <p>Flow Meter Monitoring System</p>
+        </div>
+
+        <form id="loginForm">
+            <!-- 用户名 -->
+            <div class="form-group" id="usernameGroup">
+                <label>用户名</label>
+                <input type="text" id="username" name="username" placeholder="请输入用户名" required>
+                <span class="error-tip">请输入用户名</span>
+            </div>
+
+            <!-- 密码 -->
+            <div class="form-group" id="passwordGroup">
+                <label>密码</label>
+                <input type="password" id="password" name="password" placeholder="请输入密码" required>
+                <span class="error-tip">请输入密码</span>
+            </div>
+
+            <!-- 验证码 -->
+            <div class="captcha-group">
+                <div class="form-group" id="captchaGroup">
+                    <label>验证码</label>
+                    <input type="text" id="captcha" name="captcha" placeholder="请输入验证码" maxlength="4" required>
+                    <span class="error-tip">请输入验证码</span>
+                </div>
+                <div class="form-group" style="flex: 0.6;">
+                    <label>&nbsp;</label>
+                    <div class="captcha-box" onclick="refreshCaptcha()" title="点击刷新">
+                        <span id="captchaText">A3B7</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 记住我 & 忘记密码 -->
+            <div class="form-options">
+                <label class="remember-me">
+                    <input type="checkbox" id="remember">
+                    <span>记住我</span>
+                </label>
+                <a href="#" class="forgot-password">忘记密码？</a>
+            </div>
+
+            <!-- 登录按钮 -->
+            <button type="submit" class="login-btn">登 录</button>
+        </form>
+
+        <!-- 底部 -->
+        <div class="login-footer">
+            <p>© 2026 流量计监控系统 · <a href="#">使用条款</a> · <a href="#">隐私政策</a></p>
+        </div>
+    </div>
+
+    <script>
+        // 生成随机验证码
+        function generateCaptcha() {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+            let captcha = '';
+            for (let i = 0; i < 4; i++) {
+                captcha += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return captcha;
+        }
+
+        // 刷新验证码
+        function refreshCaptcha() {
+            document.getElementById('captchaText').textContent = generateCaptcha();
+        }
+
+        // 创建浮动粒子
+        function createParticles() {
+            const container = document.getElementById('particles');
+            for (let i = 0; i < 30; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 15 + 's';
+                particle.style.animationDuration = (10 + Math.random() * 10) + 's';
+                
+                // 随机颜色
+                const colors = ['rgba(64, 224, 208, 0.6)', 'rgba(255, 105, 180, 0.6)', 'rgba(102, 126, 234, 0.6)'];
+                particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+                
+                container.appendChild(particle);
+            }
+        }
+
+        // 表单验证
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const captcha = document.getElementById('captcha').value.trim().toUpperCase();
+            const captchaText = document.getElementById('captchaText').textContent.toUpperCase();
+            
+            let hasError = false;
+
+            // 验证用户名
+            if (!username) {
+                document.getElementById('usernameGroup').classList.add('error');
+                hasError = true;
+            } else {
+                document.getElementById('usernameGroup').classList.remove('error');
+            }
+
+            // 验证密码
+            if (!password) {
+                document.getElementById('passwordGroup').classList.add('error');
+                hasError = true;
+            } else {
+                document.getElementById('passwordGroup').classList.remove('error');
+            }
+
+            // 验证验证码
+            if (!captcha || captcha !== captchaText) {
+                document.getElementById('captchaGroup').classList.add('error');
+                alert('验证码错误，请重新输入！');
+                refreshCaptcha();
+                document.getElementById('captcha').value = '';
+                hasError = true;
+            } else {
+                document.getElementById('captchaGroup').classList.remove('error');
+            }
+
+            // 登录成功（演示）
+            if (!hasError && captcha === captchaText) {
+                alert('登录成功！欢迎使用流量计监控系统');
+                // 这里可以添加实际的登录逻辑
+                // window.location.href = '/dashboard';
+            }
+        });
+
+        // 实时移除错误提示
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('input', function() {
+                this.parentElement.classList.remove('error');
+            });
+        });
+
+        // 初始化
+        createParticles();
+    </script>
+</body>
+</html>

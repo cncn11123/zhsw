@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>流量计监控系统 - 系统设置</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .navbar-brand {
+            font-size: 20px;
+            font-weight: 600;
+            color: #40e0d0;
+            text-shadow: 0 0 20px rgba(64, 224, 208, 0.5);
+        }
+
+        .navbar-menu {
+            display: flex;
+            gap: 20px;
+            list-style: none;
+        }
+
+        .navbar-menu a {
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .navbar-menu a:hover,
+        .navbar-menu a.active {
+            background: rgba(64, 224, 208, 0.2);
+            color: #40e0d0;
+        }
+
+        .navbar-user { display: flex; align-items: center; gap: 15px; }
+        .logout-btn {
+            padding: 8px 20px;
+            background: rgba(255, 100, 100, 0.3);
+            border: 1px solid rgba(255, 100, 100, 0.5);
+            border-radius: 8px;
+            color: #ff6b6b;
+            cursor: pointer;
+        }
+
+        .container { padding: 30px; max-width: 1200px; margin: 0 auto; }
+
+        .page-header { margin-bottom: 30px; }
+        .page-header h1 { font-size: 28px; }
+
+        /* 设置卡片 */
+        .settings-grid {
+            display: grid;
+            gap: 20px;
+        }
+
+        .settings-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .settings-card h3 {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #40e0d0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* 表单样式 */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #40e0d0;
+        }
+
+        .form-group select option { background: #1a1a2e; }
+
+        .form-group .hint {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 5px;
+        }
+
+        /* 开关 */
+        .switch-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .switch-group:last-child { border-bottom: none; }
+
+        .switch-info h4 { font-size: 15px; margin-bottom: 5px; }
+        .switch-info p { font-size: 13px; color: rgba(255, 255, 255, 0.5); }
+
+        .switch {
+            position: relative;
+            width: 50px;
+            height: 26px;
+        }
+
+        .switch input { opacity: 0; width: 0; height: 0; }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 26px;
+            transition: 0.3s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background: #fff;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+
+        input:checked + .slider { background: #40e0d0; }
+        input:checked + .slider:before { transform: translateX(24px); }
+
+        /* 按钮 */
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #40e0d0, #00ced1);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(64, 224, 208, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* 用户列表 */
+        .user-list {
+            display: grid;
+            gap: 15px;
+        }
+
+        .user-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+        }
+
+        .user-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #40e0d0, #00ced1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .user-info { flex: 1; }
+        .user-info h4 { font-size: 15px; margin-bottom: 3px; }
+        .user-info p { font-size: 13px; color: rgba(255, 255, 255, 0.5); }
+
+        .user-role {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+
+        .user-role.admin { background: rgba(255, 107, 107, 0.2); color: #ff6b6b; }
+        .user-role.user { background: rgba(64, 224, 208, 0.2); color: #40e0d0; }
+
+        /* 关于 */
+        .about-info {
+            text-align: center;
+            padding: 30px;
+        }
+
+        .about-logo {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+
+        .about-info h2 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .about-info p {
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 20px;
+        }
+
+        .version {
+            display: inline-block;
+            padding: 8px 20px;
+            background: rgba(64, 224, 208, 0.2);
+            border-radius: 20px;
+            color: #40e0d0;
+            font-size: 14px;
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 15px; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">📊 流量计监控系统</div>
+        <ul class="navbar-menu">
+            <li><a href="dashboard.html">仪表盘</a></li>
+            <li><a href="devices.html">设备管理</a></li>
+            <li><a href="history.html">历史数据</a></li>
+            <li><a href="alarms.html">报警中心</a></li>
+            <li><a href="settings.html" class="active">系统设置</a></li>
+        </ul>
+        <div class="navbar-user">
+            <span id="username">admin</span>
+            <button class="logout-btn" onclick="logout()">退出</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="page-header">
+            <h1>⚙️ 系统设置</h1>
+        </div>
+
+        <div class="settings-grid">
+            <!-- 用户管理 -->
+            <div class="settings-card">
+                <h3>👥 用户管理</h3>
+                <div class="user-list">
+                    <div class="user-item">
+                        <div class="user-avatar">A</div>
+                        <div class="user-info">
+                            <h4>管理员</h4>
+                            <p>admin@flowmeter.com</p>
+                        </div>
+                        <span class="user-role admin">管理员</span>
+                    </div>
+                    <div class="user-item">
+                        <div class="user-avatar">O</div>
+                        <div class="user-info">
+                            <h4>操作员</h4>
+                            <p>operator@flowmeter.com</p>
+                        </div>
+                        <span class="user-role user">操作员</span>
+                    </div>
+                    <div class="user-item">
+                        <div class="user-avatar">V</div>
+                        <div class="user-info">
+                            <h4>访客</h4>
+                            <p>guest@flowmeter.com</p>
+                        </div>
+                        <span class="user-role user">访客</span>
+                    </div>
+                </div>
+                <button class="btn btn-secondary" style="margin-top: 15px;" onclick="addUser()">+ 添加用户</button>
+            </div>
+
+            <!-- 告警设置 -->
+            <div class="settings-card">
+                <h3>🔔 告警设置</h3>
+                
+                <div class="switch-group">
+                    <div class="switch-info">
+                        <h4>邮件告警</h4>
+                        <p>通过邮件发送告警通知</p>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                
+                <div class="switch-group">
+                    <div class="switch-info">
+                        <h4>短信告警</h4>
+                        <p>通过短信发送告警通知</p>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                
+                <div class="switch-group">
+                    <div class="switch-info">
+                        <h4>微信告警</h4>
+                        <p>通过微信发送告警通知</p>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div class="form-group" style="margin-top: 20px;">
+                    <label>告警接收邮箱</label>
+                    <input type="email" value="admin@flowmeter.com" placeholder="输入告警接收邮箱">
+                </div>
+
+                <div class="form-group">
+                    <label>告警接收手机</label>
+                    <input type="tel" value="138****8888" placeholder="输入告警接收手机号">
+                </div>
+            </div>
+
+            <!-- 系统参数 -->
+            <div class="settings-card">
+                <h3>⚡ 系统参数</h3>
+                
+                <div class="form-group">
+                    <label>数据采集间隔</label>
+                    <select>
+                        <option value="1">1秒</option>
+                        <option value="5" selected>5秒</option>
+                        <option value="10">10秒</option>
+                        <option value="30">30秒</option>
+                    </select>
+                    <p class="hint">设备数据采集的时间间隔</p>
+                </div>
+
+                <div class="form-group">
+                    <label>数据保留天数</label>
+                    <select>
+                        <option value="30">30天</option>
+                        <option value="90" selected>90天</option>
+                        <option value="180">180天</option>
+                        <option value="365">365天</option>
+                    </select>
+                    <p class="hint">历史数据保留的时间</p>
+                </div>
+
+                <div class="form-group">
+                    <label>流量阈值 (m³/h)</label>
+                    <input type="number" value="200" placeholder="输入流量告警阈值">
+                    <p class="hint">超过此值触发告警</p>
+                </div>
+
+                <button class="btn btn-primary" onclick="saveSettings()">保存设置</button>
+            </div>
+
+            <!-- 关于 -->
+            <div class="settings-card">
+                <h3>ℹ️ 关于</h3>
+                <div class="about-info">
+                    <div class="about-logo">📊</div>
+                    <h2>流量计监控系统</h2>
+                    <p>Flow Meter Monitoring System</p>
+                    <span class="version">版本 v2.1.0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            if (!token) window.location.href = 'login.html';
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            if (user.username) document.getElementById('username').textContent = user.username;
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+        }
+
+        function addUser() {
+            alert('添加用户功能开发中...');
+        }
+
+        function saveSettings() {
+            alert('设置已保存！');
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
+        });
+    </script>
+</body>
+</html>

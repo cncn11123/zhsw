@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>流量计监控系统 - 仪表盘</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        /* 顶部导航 */
+        .navbar {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .navbar-brand {
+            font-size: 20px;
+            font-weight: 600;
+            color: #40e0d0;
+            text-shadow: 0 0 20px rgba(64, 224, 208, 0.5);
+        }
+
+        .navbar-menu {
+            display: flex;
+            gap: 20px;
+            list-style: none;
+        }
+
+        .navbar-menu a {
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .navbar-menu a:hover,
+        .navbar-menu a.active {
+            background: rgba(64, 224, 208, 0.2);
+            color: #40e0d0;
+        }
+
+        .navbar-user {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .navbar-user .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #40e0d0, #00ced1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .logout-btn {
+            padding: 8px 20px;
+            background: rgba(255, 100, 100, 0.3);
+            border: 1px solid rgba(255, 100, 100, 0.5);
+            border-radius: 8px;
+            color: #ff6b6b;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 100, 100, 0.5);
+        }
+
+        /* 主内容区 */
+        .container {
+            padding: 30px;
+        }
+
+        /* 统计卡片 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .stat-card .icon {
+            font-size: 36px;
+            margin-bottom: 15px;
+        }
+
+        .stat-card .label {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .stat-card .value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #40e0d0;
+            text-shadow: 0 0 20px rgba(64, 224, 208, 0.5);
+        }
+
+        .stat-card .unit {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-left: 5px;
+        }
+
+        .stat-card .trend {
+            font-size: 12px;
+            margin-top: 10px;
+        }
+
+        .stat-card .trend.up {
+            color: #4ade80;
+        }
+
+        .stat-card .trend.down {
+            color: #ff6b6b;
+        }
+
+        /* 图表区域 */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .chart-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .chart-card h3 {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .chart-container {
+            height: 300px;
+            position: relative;
+        }
+
+        /* 设备状态 */
+        .device-status {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .device-item {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .device-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .device-icon.online {
+            background: rgba(74, 222, 128, 0.2);
+        }
+
+        .device-icon.offline {
+            background: rgba(255, 107, 107, 0.2);
+        }
+
+        .device-info h4 {
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+
+        .device-info p {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+
+        .status-badge.online {
+            background: rgba(74, 222, 128, 0.2);
+            color: #4ade80;
+        }
+
+        .status-badge.offline {
+            background: rgba(255, 107, 107, 0.2);
+            color: #ff6b6b;
+        }
+
+        /* 告警区域 */
+        .alarms-section {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .alarms-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .alarms-header h3 {
+            font-size: 18px;
+        }
+
+        .alarm-count {
+            background: rgba(255, 107, 107, 0.2);
+            color: #ff6b6b;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        .alarm-list {
+            display: grid;
+            gap: 15px;
+        }
+
+        .alarm-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            border-left: 4px solid;
+        }
+
+        .alarm-item.warning {
+            border-left-color: #fbbf24;
+        }
+
+        .alarm-item.error {
+            border-left-color: #ff6b6b;
+        }
+
+        .alarm-item.info {
+            border-left-color: #40e0d0;
+        }
+
+        .alarm-icon {
+            font-size: 24px;
+        }
+
+        .alarm-content {
+            flex: 1;
+        }
+
+        .alarm-content h4 {
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .alarm-content p {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .alarm-time {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        /* 响应式 */
+        @media (max-width: 1200px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            .navbar {
+                flex-direction: column;
+                gap: 15px;
+            }
+            .device-status {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 加载动画 */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 200px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(64, 224, 208, 0.2);
+            border-top-color: #40e0d0;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* 刷新按钮 */
+        .refresh-btn {
+            background: rgba(64, 224, 208, 0.2);
+            border: 1px solid rgba(64, 224, 208, 0.5);
+            color: #40e0d0;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .refresh-btn:hover {
+            background: rgba(64, 224, 208, 0.3);
+        }
+
+        .refresh-btn:hover .icon {
+            transform: rotate(180deg);
+        }
+
+        .refresh-btn .icon {
+            display: inline-block;
+            transition: transform 0.5s;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="navbar-brand">📊 流量计监控系统</div>
+        <ul class="navbar-menu">
+            <li><a href="dashboard.html" class="active">仪表盘</a></li>
+            <li><a href="devices.html">设备管理</a></li>
+            <li><a href="history.html">历史数据</a></li>
+            <li><a href="alarms.html">报警中心</a></li>
+            <li><a href="settings.html">系统设置</a></li>
+        </ul>
+        <div class="navbar-user">
+            <span id="username">admin</span>
+            <div class="avatar">A</div>
+            <button class="logout-btn" onclick="logout()">退出</button>
+        </div>
+    </nav>
+
+    <!-- 主内容区 -->
+    <div class="container">
+        <!-- 统计卡片 -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="icon">🌊</div>
+                <div class="label">瞬时流量</div>
+                <div class="value" id="instantFlow">125.6<span class="unit">m³/h</span></div>
+                <div class="trend up">↑ 12.3% 较昨日</div>
+            </div>
+            <div class="stat-card">
+                <div class="icon">📊</div>
+                <div class="label">今日累计</div>
+                <div class="value" id="todayTotal">2,847.5<span class="unit">m³</span></div>
+                <div class="trend up">↑ 8.6% 较昨日</div>
+            </div>
+            <div class="stat-card">
+                <div class="icon">📈</div>
+                <div class="label">本月累计</div>
+                <div class="value" id="monthTotal">85,420<span class="unit">m³</span></div>
+                <div class="trend up">↑ 15.2% 较上月</div>
+            </div>
+            <div class="stat-card">
+                <div class="icon">🔄</div>
+                <div class="label">设备在线</div>
+                <div class="value" id="onlineCount">8<span class="unit">/ 10</span></div>
+                <div class="trend down">↓ 2 设备离线</div>
+            </div>
+        </div>
+
+        <!-- 图表区域 -->
+        <div class="charts-grid">
+            <!-- 流量趋势图 -->
+            <div class="chart-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h3>📈 流量趋势（24小时）</h3>
+                    <button class="refresh-btn" onclick="refreshChart()">
+                        <span class="icon">🔄</span> 刷新
+                    </button>
+                </div>
+                <div class="chart-container">
+                    <canvas id="flowChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 设备状态 -->
+            <div class="chart-card">
+                <h3>📱 设备状态</h3>
+                <div class="device-status" id="deviceStatus">
+                    <!-- 设备列表 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 告警区域 -->
+        <div class="alarms-section">
+            <div class="alarms-header">
+                <h3>⚠️ 最新告警</h3>
+                <span class="alarm-count" id="alarmCount">3 条未处理</span>
+            </div>
+            <div class="alarm-list" id="alarmList">
+                <!-- 告警列表 -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 检查登录状态
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = 'login.html';
+            }
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            if (user.username) {
+                document.getElementById('username').textContent = user.username;
+            }
+        }
+
+        // 退出登录
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+        }
+
+        // 初始化流量趋势图
+        let flowChart;
+        function initFlowChart() {
+            const ctx = document.getElementById('flowChart').getContext('2d');
+            
+            // 生成模拟数据
+            const hours = [];
+            const flowData = [];
+            const now = new Date();
+            for (let i = 23; i >= 0; i--) {
+                const hour = new Date(now.getTime() - i * 60 * 60 * 1000);
+                hours.push(hour.getHours() + ':00');
+                flowData.push((100 + Math.random() * 60 + Math.sin(i / 4) * 30).toFixed(1));
+            }
+
+            flowChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: hours,
+                    datasets: [{
+                        label: '流量 (m³/h)',
+                        data: flowData,
+                        borderColor: '#40e0d0',
+                        backgroundColor: 'rgba(64, 224, 208, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 3,
+                        pointBackgroundColor: '#40e0d0'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.6)'
+                            }
+                        },
+                        y: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.6)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 刷新图表
+        function refreshChart() {
+            if (flowChart) {
+                const newData = flowChart.data.datasets[0].data.map(() => 
+                    (100 + Math.random() * 60 + Math.random() * 30).toFixed(1)
+                );
+                flowChart.data.datasets[0].data = newData;
+                flowChart.update();
+            }
+            
+            // 模拟更新统计数据
+            document.getElementById('instantFlow').innerHTML = 
+                (120 + Math.random() * 20).toFixed(1) + '<span class="unit">m³/h</span>';
+            document.getElementById('todayTotal').innerHTML = 
+                (2800 + Math.random() * 100).toFixed(1) + '<span class="unit">m³</span>';
+        }
+
+        // 渲染设备状态
+        function renderDevices() {
+            const devices = [
+                { name: '流量计 A1', type: '涡街', status: 'online', flow: '125.6' },
+                { name: '流量计 A2', type: '电磁', status: 'online', flow: '98.3' },
+                { name: '流量计 B1', type: '超声波', status: 'offline', flow: '--' },
+                { name: '流量计 B2', type: '涡街', status: 'online', flow: '156.2' },
+                { name: '流量计 C1', type: '电磁', status: 'online', flow: '87.5' },
+                { name: '流量计 C2', type: '超声波', status: 'offline', flow: '--' },
+                { name: '流量计 D1', type: '涡街', status: 'online', flow: '112.8' },
+                { name: '流量计 D2', type: '电磁', status: 'online', flow: '134.1' },
+                { name: '流量计 E1', type: '超声波', status: 'online', flow: '95.7' },
+                { name: '流量计 E2', type: '涡街', status: 'offline', flow: '--' }
+            ];
+
+            const container = document.getElementById('deviceStatus');
+            container.innerHTML = devices.slice(0, 6).map(d => `
+                <div class="device-item">
+                    <div class="device-icon ${d.status}">
+                        ${d.status === 'online' ? '✅' : '❌'}
+                    </div>
+                    <div class="device-info">
+                        <h4>${d.name}</h4>
+                        <p>${d.type} · ${d.status === 'online' ? d.flow + ' m³/h' : '离线'}</p>
+                    </div>
+                    <span class="status-badge ${d.status}">${d.status === 'online' ? '在线' : '离线'}</span>
+                </div>
+            `).join('');
+
+            // 更新在线数
+            const online = devices.filter(d => d.status === 'online').length;
+            document.getElementById('onlineCount').innerHTML = 
+                `${online}<span class="unit">/ ${devices.length}</span>`;
+        }
+
+        // 渲染告警列表
+        function renderAlarms() {
+            const alarms = [
+                { type: 'error', icon: '🔴', title: '流量计 B1 通讯中断', time: '10分钟前', desc: '设备无响应，请检查连接' },
+                { type: 'warning', icon: '🟡', title: '流量计 E2 流量异常', time: '25分钟前', desc: '瞬时流量低于阈值' },
+                { type: 'info', icon: '🔵', title: '流量计 A1 校准提醒', time: '1小时前', desc: '设备已运行90天，建议校准' }
+            ];
+
+            const container = document.getElementById('alarmList');
+            container.innerHTML = alarms.map(a => `
+                <div class="alarm-item ${a.type}">
+                    <div class="alarm-icon">${a.icon}</div>
+                    <div class="alarm-content">
+                        <h4>${a.title}</h4>
+                        <p>${a.desc}</p>
+                    </div>
+                    <div class="alarm-time">${a.time}</div>
+                </div>
+            `).join('');
+
+            document.getElementById('alarmCount').textContent = `${alarms.length} 条未处理`;
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
+            initFlowChart();
+            renderDevices();
+            renderAlarms();
+
+            // 每30秒自动刷新
+            setInterval(refreshChart, 30000);
+        });
+    </script>
+<script>
+// 页面联动脚本
+function navigateTo(page) {
+    window.location.href = page + '.html';
+}
+
+// 检查登录状态
+function checkAuth() {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = 'login.html';
+        return false;
+    }
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    if (user.username) {
+        document.getElementById('username').textContent = user.username;
+    }
+    return true;
+}
+
+// 退出登录
+function logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = 'login.html';
+}
+
+// 导航高亮
+function setActiveNav() {
+    const currentPage = window.location.pathname.split('/').pop().replace('.html', '');
+    document.querySelectorAll('.navbar-menu a').forEach(link => {
+        const href = link.getAttribute('href').replace('.html', '');
+        if (href === currentPage || (currentPage === '' && href === 'dashboard')) {
+            link.classList.add('active');
+        }
+    });
+}
+setActiveNav();</script></body>
+</html>
